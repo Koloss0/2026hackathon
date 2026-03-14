@@ -62,13 +62,42 @@ export class RouteOptimizer {
 
     // ── Your implementation below ─────────────────────────────────────────────
 
+    /**
+     * Takes a technician, list of boxes, and route ID's and returns the length of the route.
+     * 
+     * @param technician 
+     * @param boxes 
+     * @param routeIds 
+     */
     calculateRouteDistance(
         technician: Technician,
         boxes: Box[],
         routeIds: string[]
     ): number | null {
-        // TODO: implement this method
-        throw new Error('Not implemented');
+        if (technician === undefined || boxes === undefined || routeIds === undefined) {
+            return null;
+        }
+
+        if (boxes.length == 0 || routeIds.length == 0)
+        {
+            return 0.0;
+        }
+
+        var distance = 0.0;
+        var prevLocation = technician.startLocation;
+        for (const id of routeIds) {
+            var nextBox = boxes.find((b, _) => b.id == id);
+
+            if (nextBox === undefined) {
+                return null;
+            }
+
+            var nextLocation = nextBox!.location;
+            distance += this.haversineDistance(prevLocation, nextLocation);
+            prevLocation = nextLocation;
+        }
+        
+        return distance;
     }
 
     findShortestRoute(technician: Technician, boxes: Box[]): RouteResult {
