@@ -100,8 +100,61 @@ export class RouteOptimizer {
         return distance;
     }
 
+    dfs(cost: number[][], vis: boolean[], last: number, cnt: number, currentPath: number[], currentCost: number): {cost: number, path: number[]} {
+        const n = cost.length;
+
+        if (cnt === n) {
+            return {cost: currentCost, path: currentPath};
+        }
+
+        let minResult: {cost: number, path: number[]} = {cost: Infinity, path: []};
+
+        for (let city = 1; city < n; city++) {
+            if (!vis[city]) {
+                vis[city] = true;
+                let newPath = [...currentPath, city];
+                let newCost = currentCost + cost[last][city];
+                let result = this.dfs(cost, vis, city, cnt + 1, newPath, newCost);
+                if (result.cost < minResult.cost) {
+                    minResult = result;
+                }
+                vis[city] = false;
+            }
+        }
+
+        return minResult;
+    }
+
+    tsp(cost: number[][]): {cost: number, path: number[]} {
+        const n = cost.length;
+        const vis = Array(n).fill(false);
+        vis[0] = true;
+        return this.dfs(cost, vis, 0, 1, [0], 0);
+    }
+
     findShortestRoute(technician: Technician, boxes: Box[]): RouteResult {
-        // TODO: implement this method
-        throw new Error('Not implemented');
+        const n = boxes.length + 1;
+        let cost: number[][] = Array.from({ length: n }, () => Array(n).fill(0));
+
+        // Populate cost matrix with distances
+        cost[0][0] = 0;
+        for (let i = 1; i < n; i++) {
+            cost[0][i] = this.haversineDistance(technician.startLocation, boxes[i - 1].location);
+            cost[i][0] = cost[0][i];
+        }
+        for (let i = 1; i < n; i++) {
+            for (let j = 1; j < n; j++) {
+                cost[i][j] = this.haversineDistance(boxes[i - 1].location, boxes[j - 1].location);
+            }
+        }
+
+        let result = this.tsp(cost);
+        let route = result.path.slice(1).map(i => boxes[i - 1].id);
+
+        return {
+            technicianId: technician.id,
+            route: route,
+            totalDistanceKm: result.cost
+        };
     }
 }
